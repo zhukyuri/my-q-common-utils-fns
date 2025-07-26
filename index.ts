@@ -1,4 +1,13 @@
-import moment, { Moment } from 'moment'
+import {
+  format,
+  subDays,
+  subMonths,
+  subYears,
+  addDays,
+  addMonths,
+  eachMonthOfInterval,
+  eachDayOfInterval,
+} from 'date-fns'
 
 export type TSubtract = 'month' | 'day' | 'year'
 export type TAmount = number
@@ -34,7 +43,7 @@ export class MyQFormatDate {
     return new Date(year, monthIndex, day).toDateString()
   }
 
-  public formatDate = (date: Date, format = 'DD.MM'): string => moment(date).format(format).toString()
+  public formatDate = (date: Date, formatStr = 'dd.MM'): string => format(date, formatStr)
 
   public begginingDay = (date: Date = this.baseDate): Date => {
     return new Date(date.getFullYear(), date.getMonth(), date.getDate())
@@ -44,32 +53,52 @@ export class MyQFormatDate {
     return new Date(date.getFullYear(), date.getMonth())
   }
 
-  public subtractDate = (date: Date, subtract: TSubtract = 'month', amount: TAmount = 1, addDays: number = 0): Date => {
-    let res = moment(this.begginingDay(date)).subtract(amount, subtract)
-    if (addDays) res = res.add(addDays, 'day')
-    return res.toDate()
+  public subtractDate = (
+    date: Date,
+    subtract: TSubtract = 'month',
+    amount: TAmount = 1,
+    addDaysAmount: number = 0
+  ): Date => {
+    const startDay = this.begginingDay(date)
+    let result: Date
+
+    if (subtract === 'day') {
+      result = subDays(startDay, amount)
+    } else if (subtract === 'month') {
+      result = subMonths(startDay, amount)
+    } else if (subtract === 'year') {
+      result = subYears(startDay, amount)
+    } else {
+      result = startDay
+    }
+
+    if (addDaysAmount) {
+      result = addDays(result, addDaysAmount)
+    }
+
+    return result
   }
 
   public dateListDayOfMoth = (baseDate: Date = this.baseDate): Date[] => {
     const endDate: Date = this.begginingDay(baseDate)
-    let dateMath: Moment = moment(this.subtractDate(endDate, 'month', 1, 1))
+    let currentDate: Date = this.subtractDate(endDate, 'month', 1, 1)
     this.dateArray = []
 
-    while (dateMath.toDate() <= endDate) {
-      this.dateArray.push(dateMath.toDate())
-      dateMath = moment(dateMath).add(1, 'day')
+    while (currentDate <= endDate) {
+      this.dateArray.push(currentDate)
+      currentDate = addDays(currentDate, 1)
     }
     return this.dateArray
   }
 
   public dateListMonthOfYear = (baseDate: Date = this.baseDate): Date[] => {
     const endDate: Date = this.subtractDate(this.begginingMonth(baseDate))
-    let dateMath: Moment = moment(this.subtractDate(endDate, 'year', 1))
+    let currentDate: Date = this.subtractDate(endDate, 'year', 1)
     this.dateArray = []
 
-    while (dateMath.toDate() <= endDate) {
-      this.dateArray.push(dateMath.toDate())
-      dateMath = moment(dateMath).add(1, 'month')
+    while (currentDate <= endDate) {
+      this.dateArray.push(currentDate)
+      currentDate = addMonths(currentDate, 1)
     }
     return this.dateArray
   }
@@ -86,42 +115,39 @@ export class MyQFormatDate {
     return Array.from({ length: count }, (_, index) => index + 1)
   }
 
-  public allDaysOfMonth = (date: Date): TFullDate[] => {
-    const daysArray: TFullDate[] = []
-    const dateM = moment(date)
-    const endDate = dateM.add(1, 'day')
-    const startDate = endDate.clone().subtract(1, 'month')
-    const daysDiff = moment(endDate).diff(startDate, 'days')
+  public allDaysOfMonth_ByDateEnd = (dateEnd: Date = this.baseDate): TFullDate[] => {
+    const endDate = new Date(dateEnd.getFullYear(), dateEnd.getMonth(), dateEnd.getDate())
+    const startDate = addDays(subMonths(endDate, 1), 1)
 
-    for (let i = 0; i < daysDiff; i++) {
-      const dayDate = moment(startDate).add(i, 'days').toDate()
-      daysArray.push({
-        date: dayDate,
-        year: dayDate.getFullYear(),
-        month: dayDate.getMonth() + 1,
-        day: dayDate.getDate(),
-        key: moment(dayDate).format('YY-MM-DD'),
-      })
-    }
+    const daysArray = eachDayOfInterval({
+      start: startDate,
+      end: endDate,
+    })
 
-    return daysArray
+    return daysArray.map((i) => ({
+      date: i,
+      year: i.getFullYear(),
+      month: i.getMonth() + 1,
+      day: i.getDate(),
+      key: format(i, 'yy-MM-dd'),
+    }))
   }
 
-  public allMonthOfYear = (date: Date): TFullDate[] => {
-    const monthArray: TFullDate[] = []
-    const currentMonth = new Date(date.getFullYear(), date.getMonth() + 2, 1)
+  public allMonthOfYear_ByDateEnd = (dateEnd: Date = this.baseDate): TFullDate[] => {
+    const endDate = new Date(dateEnd.getFullYear(), dateEnd.getMonth())
+    const startDate = subMonths(endDate, 11)
 
-    for (let i = 11; i >= 0; i--) {
-      const monthDate = new Date(currentMonth.getFullYear(), date.getMonth() - i, 1)
-      monthArray.push({
-        date: monthDate,
-        year: monthDate.getFullYear(),
-        month: monthDate.getMonth() + 1,
-        day: monthDate.getDate(),
-        key: moment(monthDate).format('YY-MM-DD'),
-      })
-    }
+    const daysArray = eachMonthOfInterval({
+      start: startDate,
+      end: endDate,
+    })
 
-    return monthArray
+    return daysArray.map((i) => ({
+      date: i,
+      year: i.getFullYear(),
+      month: i.getMonth() + 1,
+      day: i.getDate(),
+      key: format(i, 'yy-MM-dd'),
+    }))
   }
 }

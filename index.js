@@ -1,10 +1,7 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MyQFormatDate = void 0;
-const moment_1 = __importDefault(require("moment"));
+const date_fns_1 = require("date-fns");
 class MyQFormatDate {
     baseDate;
     dateArray = [];
@@ -20,36 +17,50 @@ class MyQFormatDate {
     getNewDate = ({ year, monthIndex, day }) => {
         return new Date(year, monthIndex, day).toDateString();
     };
-    formatDate = (date, format = 'DD.MM') => (0, moment_1.default)(date).format(format).toString();
+    formatDate = (date, formatStr = 'dd.MM') => (0, date_fns_1.format)(date, formatStr);
     begginingDay = (date = this.baseDate) => {
         return new Date(date.getFullYear(), date.getMonth(), date.getDate());
     };
     begginingMonth = (date = this.baseDate) => {
         return new Date(date.getFullYear(), date.getMonth());
     };
-    subtractDate = (date, subtract = 'month', amount = 1, addDays = 0) => {
-        let res = (0, moment_1.default)(this.begginingDay(date)).subtract(amount, subtract);
-        if (addDays)
-            res = res.add(addDays, 'day');
-        return res.toDate();
+    subtractDate = (date, subtract = 'month', amount = 1, addDaysAmount = 0) => {
+        const startDay = this.begginingDay(date);
+        let result;
+        if (subtract === 'day') {
+            result = (0, date_fns_1.subDays)(startDay, amount);
+        }
+        else if (subtract === 'month') {
+            result = (0, date_fns_1.subMonths)(startDay, amount);
+        }
+        else if (subtract === 'year') {
+            result = (0, date_fns_1.subYears)(startDay, amount);
+        }
+        else {
+            result = startDay;
+        }
+        if (addDaysAmount) {
+            result = (0, date_fns_1.addDays)(result, addDaysAmount);
+        }
+        return result;
     };
     dateListDayOfMoth = (baseDate = this.baseDate) => {
         const endDate = this.begginingDay(baseDate);
-        let dateMath = (0, moment_1.default)(this.subtractDate(endDate, 'month', 1, 1));
+        let currentDate = this.subtractDate(endDate, 'month', 1, 1);
         this.dateArray = [];
-        while (dateMath.toDate() <= endDate) {
-            this.dateArray.push(dateMath.toDate());
-            dateMath = (0, moment_1.default)(dateMath).add(1, 'day');
+        while (currentDate <= endDate) {
+            this.dateArray.push(currentDate);
+            currentDate = (0, date_fns_1.addDays)(currentDate, 1);
         }
         return this.dateArray;
     };
     dateListMonthOfYear = (baseDate = this.baseDate) => {
         const endDate = this.subtractDate(this.begginingMonth(baseDate));
-        let dateMath = (0, moment_1.default)(this.subtractDate(endDate, 'year', 1));
+        let currentDate = this.subtractDate(endDate, 'year', 1);
         this.dateArray = [];
-        while (dateMath.toDate() <= endDate) {
-            this.dateArray.push(dateMath.toDate());
-            dateMath = (0, moment_1.default)(dateMath).add(1, 'month');
+        while (currentDate <= endDate) {
+            this.dateArray.push(currentDate);
+            currentDate = (0, date_fns_1.addMonths)(currentDate, 1);
         }
         return this.dateArray;
     };
@@ -62,38 +73,35 @@ class MyQFormatDate {
     makeSequentialArray = function (count) {
         return Array.from({ length: count }, (_, index) => index + 1);
     };
-    allDaysOfMonth = (date) => {
-        const daysArray = [];
-        const dateM = (0, moment_1.default)(date);
-        const endDate = dateM.add(1, 'day');
-        const startDate = endDate.clone().subtract(1, 'month');
-        const daysDiff = (0, moment_1.default)(endDate).diff(startDate, 'days');
-        for (let i = 0; i < daysDiff; i++) {
-            const dayDate = (0, moment_1.default)(startDate).add(i, 'days').toDate();
-            daysArray.push({
-                date: dayDate,
-                year: dayDate.getFullYear(),
-                month: dayDate.getMonth() + 1,
-                day: dayDate.getDate(),
-                key: (0, moment_1.default)(dayDate).format('YY-MM-DD'),
-            });
-        }
-        return daysArray;
+    allDaysOfMonth_ByDateEnd = (dateEnd = this.baseDate) => {
+        const endDate = new Date(dateEnd.getFullYear(), dateEnd.getMonth(), dateEnd.getDate());
+        const startDate = (0, date_fns_1.addDays)((0, date_fns_1.subMonths)(endDate, 1), 1);
+        const daysArray = (0, date_fns_1.eachDayOfInterval)({
+            start: startDate,
+            end: endDate,
+        });
+        return daysArray.map((i) => ({
+            date: i,
+            year: i.getFullYear(),
+            month: i.getMonth() + 1,
+            day: i.getDate(),
+            key: (0, date_fns_1.format)(i, 'yy-MM-dd'),
+        }));
     };
-    allMonthOfYear = (date) => {
-        const monthArray = [];
-        const currentMonth = new Date(date.getFullYear(), date.getMonth() + 2, 1);
-        for (let i = 11; i >= 0; i--) {
-            const monthDate = new Date(currentMonth.getFullYear(), date.getMonth() - i, 1);
-            monthArray.push({
-                date: monthDate,
-                year: monthDate.getFullYear(),
-                month: monthDate.getMonth() + 1,
-                day: monthDate.getDate(),
-                key: (0, moment_1.default)(monthDate).format('YY-MM-DD'),
-            });
-        }
-        return monthArray;
+    allMonthOfYear_ByDateEnd = (dateEnd = this.baseDate) => {
+        const endDate = new Date(dateEnd.getFullYear(), dateEnd.getMonth());
+        const startDate = (0, date_fns_1.subMonths)(endDate, 11);
+        const daysArray = (0, date_fns_1.eachMonthOfInterval)({
+            start: startDate,
+            end: endDate,
+        });
+        return daysArray.map((i) => ({
+            date: i,
+            year: i.getFullYear(),
+            month: i.getMonth() + 1,
+            day: i.getDate(),
+            key: (0, date_fns_1.format)(i, 'yy-MM-dd'),
+        }));
     };
 }
 exports.MyQFormatDate = MyQFormatDate;

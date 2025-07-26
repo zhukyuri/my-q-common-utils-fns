@@ -10,12 +10,15 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "sourceMap": false,
-    "target": "esnext"
+    "target": "esnext",
+    "skipLibCheck": true
   },
   "exclude": [
     "node_modules",
     "**/*.spec.ts",
     "temp",
-    "jest.config.ts"
+    "jest.config.ts",
+    "temp/x-old-index.ts",
+    "x-old-index.js"
   ]
 }
