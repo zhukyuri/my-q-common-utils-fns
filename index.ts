@@ -7,8 +7,9 @@ import {
   addMonths,
   eachMonthOfInterval,
   eachDayOfInterval,
+  startOfDay,
 } from 'date-fns'
-
+import { UTCDate } from "@date-fns/utc";
 export type TSubtract = 'month' | 'day' | 'year'
 export type TAmount = number
 
@@ -19,7 +20,7 @@ export interface TDateInitFormat {
 }
 
 export interface TFullDate {
-  date: Date
+  date: Date | string
   year: number
   month: number
   day: number
@@ -111,21 +112,17 @@ export class MyQFormatDate {
     return new Date(date.getFullYear(), date.getMonth(), 0).getDate()
   }
 
-  public makeSequentialArray = function (count: number): number[] {
-    return Array.from({ length: count }, (_, index) => index + 1)
-  }
-
-  public allDaysOfMonth_ByDateEnd = (dateEnd: Date = this.baseDate): TFullDate[] => {
-    const endDate = new Date(dateEnd.getFullYear(), dateEnd.getMonth(), dateEnd.getDate())
-    const startDate = addDays(subMonths(endDate, 1), 1)
+  public allDaysOfMonth_ByDateEnd = (dateEnd: string = this.baseDate.toISOString()): TFullDate[] => {
+    const _endDateUTC = new UTCDate(dateEnd)
+    const startDate = addDays(subMonths(_endDateUTC, 1), 1)
 
     const daysArray = eachDayOfInterval({
       start: startDate,
-      end: endDate,
+      end: _endDateUTC,
     })
 
     return daysArray.map((i) => ({
-      date: i,
+      date: startOfDay(new UTCDate(i)).toISOString(),
       year: i.getFullYear(),
       month: i.getMonth() + 1,
       day: i.getDate(),
@@ -133,17 +130,17 @@ export class MyQFormatDate {
     }))
   }
 
-  public allMonthOfYear_ByDateEnd = (dateEnd: Date = this.baseDate): TFullDate[] => {
-    const endDate = new Date(dateEnd.getFullYear(), dateEnd.getMonth())
-    const startDate = subMonths(endDate, 11)
+  public allMonthOfYear_ByDateEnd = (dateEnd: string = this.baseDate.toISOString()): TFullDate[] => {
+    const _endDateUTC = new UTCDate(dateEnd)
+    const startDate = subMonths(_endDateUTC, 11)
 
     const daysArray = eachMonthOfInterval({
       start: startDate,
-      end: endDate,
+      end: _endDateUTC,
     })
 
     return daysArray.map((i) => ({
-      date: i,
+      date: startOfDay(new UTCDate(i)).toISOString(),
       year: i.getFullYear(),
       month: i.getMonth() + 1,
       day: i.getDate(),

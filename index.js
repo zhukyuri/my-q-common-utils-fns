@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MyQFormatDate = void 0;
 const date_fns_1 = require("date-fns");
+const utc_1 = require("@date-fns/utc");
 class MyQFormatDate {
     baseDate;
     dateArray = [];
@@ -70,33 +71,30 @@ class MyQFormatDate {
     endDayOdMonth(date) {
         return new Date(date.getFullYear(), date.getMonth(), 0).getDate();
     }
-    makeSequentialArray = function (count) {
-        return Array.from({ length: count }, (_, index) => index + 1);
-    };
-    allDaysOfMonth_ByDateEnd = (dateEnd = this.baseDate) => {
-        const endDate = new Date(dateEnd.getFullYear(), dateEnd.getMonth(), dateEnd.getDate());
-        const startDate = (0, date_fns_1.addDays)((0, date_fns_1.subMonths)(endDate, 1), 1);
+    allDaysOfMonth_ByDateEnd = (dateEnd = this.baseDate.toISOString()) => {
+        const _endDateUTC = new utc_1.UTCDate(dateEnd);
+        const startDate = (0, date_fns_1.addDays)((0, date_fns_1.subMonths)(_endDateUTC, 1), 1);
         const daysArray = (0, date_fns_1.eachDayOfInterval)({
             start: startDate,
-            end: endDate,
+            end: _endDateUTC,
         });
         return daysArray.map((i) => ({
-            date: i,
+            date: (0, date_fns_1.startOfDay)(new utc_1.UTCDate(i)).toISOString(),
             year: i.getFullYear(),
             month: i.getMonth() + 1,
             day: i.getDate(),
             key: (0, date_fns_1.format)(i, 'yy-MM-dd'),
         }));
     };
-    allMonthOfYear_ByDateEnd = (dateEnd = this.baseDate) => {
-        const endDate = new Date(dateEnd.getFullYear(), dateEnd.getMonth());
-        const startDate = (0, date_fns_1.subMonths)(endDate, 11);
+    allMonthOfYear_ByDateEnd = (dateEnd = this.baseDate.toISOString()) => {
+        const _endDateUTC = new utc_1.UTCDate(dateEnd);
+        const startDate = (0, date_fns_1.subMonths)(_endDateUTC, 11);
         const daysArray = (0, date_fns_1.eachMonthOfInterval)({
             start: startDate,
-            end: endDate,
+            end: _endDateUTC,
         });
         return daysArray.map((i) => ({
-            date: i,
+            date: (0, date_fns_1.startOfDay)(new utc_1.UTCDate(i)).toISOString(),
             year: i.getFullYear(),
             month: i.getMonth() + 1,
             day: i.getDate(),
