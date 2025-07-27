@@ -45,6 +45,12 @@ class MyQFormatDate {
         }
         return result;
     };
+    addDays = (date, days) => {
+        return (0, date_fns_1.addDays)(new utc_1.UTCDate(date), days);
+    };
+    addMonths = (date, months) => {
+        return (0, date_fns_1.addMonths)(new utc_1.UTCDate(date), months);
+    };
     dateListDayOfMoth = (baseDate = this.baseDate) => {
         const endDate = this.begginingDay(baseDate);
         let currentDate = this.subtractDate(endDate, 'month', 1, 1);

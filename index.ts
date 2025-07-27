@@ -80,6 +80,14 @@ export class MyQFormatDate {
     return result
   }
 
+  public addDays = (date: string, days: number): Date => {
+    return addDays(new UTCDate(date), days)
+  }
+
+  public addMonths = (date: string, months: number): Date => {
+    return addMonths(new UTCDate(date), months)
+  }
+
   public dateListDayOfMoth = (baseDate: Date = this.baseDate): Date[] => {
     const endDate: Date = this.begginingDay(baseDate)
     let currentDate: Date = this.subtractDate(endDate, 'month', 1, 1)
