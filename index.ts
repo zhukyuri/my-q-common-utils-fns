@@ -20,7 +20,7 @@ export interface TDateInitFormat {
 }
 
 export interface TFullDate {
-  date: Date | string
+  date: string
   year: number
   month: number
   day: number
